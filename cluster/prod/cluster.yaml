@@ -1,0 +1,91 @@
+apiVersion: couchbase.com/v2
+kind: CouchbaseCluster
+metadata:
+  name: prod-cluster
+spec:
+  image: couchbase/server:7.1.1
+  paused: false
+  antiAffinity: true 
+  autoResourceAllocation:
+    cpuLimits: 4
+    cpuRequests: 2
+    enabled: true
+    overheadPercent: 25 # Related with autoScale?? 
+  platform: gce
+  securityContext:
+    runAsUser: 1000
+    runAsNonRoot: true
+    fsGroup: 1000
+  security:
+    adminSecret: cb-auth
+  backup:
+    managed: true
+    image: couchbase/operator-backup:1.3.0 
+    serviceAccountName: couchbase-backup
+  buckets:
+    managed: false
+  cluster:
+    clusterName: prod-cluster
+    dataServiceMemoryQuota: 4096Mi
+    indexServiceMemoryQuota: 2048Mi
+    queryServiceMemoryQuota: 256Mi
+    indexStorageSetting: memory_optimized
+    autoFailoverTimeout: 30s
+    autoFailoverMaxCount: 3 # Confirm with couchbase team
+    autoFailoverOnDataDiskIssues: true
+    autoFailoverOnDataDiskIssuesTimePeriod: 30s
+    autoFailoverServerGroup: false
+    autoCompaction:
+      databaseFragmentationThreshold:
+        percent: 30
+        size: 1Gi
+      viewFragmentationThreshold:
+        percent: 30
+        size: 1Gi
+      parallelCompaction: false
+      timeWindow:
+        start: 02:00
+        end: 06:00
+        abortCompactionOutsideWindow: true
+      tombstonePurgeInterval: 72h
+  enableOnlineVolumeExpansion: true 
+  volumeClaimTemplates: 
+  - metadata:
+      name: default
+    spec:
+      storageClassName: standard-lazy-bound 
+      resources: 
+        requests:
+          storage: 10Gi
+  - metadata:
+      name: data
+    spec:
+      storageClassName: standard-lazy-bound 
+      resources: 
+        requests:
+          storage: 40Gi
+  - metadata:
+      name: cindex
+    spec:
+      storageClassName: standard-lazy-bound 
+      resources: 
+        requests:
+          storage: 5Gi
+  servers:
+  - name: data_service
+    autoscaleEnabled: true # How does autoscaler works?
+    size: 3
+    services:
+    - data
+    volumeMounts:
+      default: default
+      data: data
+  - name: index_service
+    autoscaleEnabled: true 
+    size: 2
+    services:
+    - index
+    - query
+    volumeMounts:
+      default: default
+      index: cindex

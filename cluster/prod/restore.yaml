@@ -1,0 +1,11 @@
+apiVersion: couchbase.com/v2
+kind: CouchbaseBackupRestore
+metadata:
+  name: prod-restore
+spec:
+  backup: prod-backup
+  repo: prod-cluster-2022-10-05T11_51_29 # grep this information by running `kubectl get couchbasebackup prod-backup -o yaml -n couchbase` 
+  start:
+    str: oldest
+  end:
+    str: latest
