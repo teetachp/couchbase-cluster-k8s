@@ -1,0 +1,17 @@
+apiVersion: "networking.k8s.io/v1"
+kind: Ingress
+metadata:
+  name: nonprod-cluster-ing
+  annotations:
+    kubernetes.io/ingress.class: gce
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /*
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: nonprod-cluster-ui
+            port: 
+              number: 8091

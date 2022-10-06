@@ -15,6 +15,16 @@ spec:
     adminSecret: cb-auth
   buckets:
     managed: false
+  networking:
+    exposeAdminConsole: true 
+    adminConsoleServiceTemplate:
+      spec:
+        type: NodePort
+    exposedFeatures: 
+    - client
+    exposedFeatureServiceTemplate:
+      spec:
+        type: NodePort
   cluster:
     clusterName: nonprod-cluster
     dataServiceMemoryQuota: 4096Mi
@@ -73,3 +83,13 @@ spec:
       default: default
       data: data
       index: cindex
+
+--- # Temporary setup for secret
+kind: Secret
+metadata:
+  name: cb-auth
+type: Opaque
+apiVersion: v1
+stringData: 
+  password: testtest
+  username: admin
